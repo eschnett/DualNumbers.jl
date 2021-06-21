@@ -1,0 +1,3 @@
+var documenterSearchIndex = {"docs":
+[{"location":"#DualNumbers.jl","page":"DualNumbers.jl","title":"DualNumbers.jl","text":"","category":"section"},{"location":"","page":"DualNumbers.jl","title":"DualNumbers.jl","text":"Dual\nderivative","category":"page"},{"location":"#DualNumbers.Dual","page":"DualNumbers.jl","title":"DualNumbers.Dual","text":"Dual numbers with a scalar dual part\n\n\n\n\n\n","category":"type"},{"location":"#DualNumbers.derivative","page":"DualNumbers.jl","title":"DualNumbers.derivative","text":"derivative(f, x)\nderivative(f, xs, i)\n\nEvaluate the partial derivative of the scalar-argument function f(x) at x, or of the array-argument function f(xs) at xs[i].\n\n\n\n\n\n","category":"function"}]
+}
