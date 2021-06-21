@@ -1,7 +1,9 @@
 using DualNumbers
+using Random
 using StaticArrays
 using Test
 
+Random.seed!(0)
 @testset "Ring" begin
     T = Int
 
@@ -57,6 +59,7 @@ using Test
     end
 end
 
+Random.seed!(0)
 @testset "Field" begin
     T = Rational{Int128}
 
@@ -92,6 +95,7 @@ end
     end
 end
 
+Random.seed!(0)
 @testset "Real" begin
     T = Float64
 
@@ -113,6 +117,7 @@ end
     end
 end
 
+Random.seed!(0)
 @testset "Basic Derivatives" begin
     T = Float64
 
@@ -131,6 +136,7 @@ end
     end
 end
 
+Random.seed!(0)
 @testset "Derivative laws" begin
     T = Float64
 
@@ -164,6 +170,7 @@ end
     end
 end
 
+Random.seed!(0)
 @testset "Derivatives of multi-valued functions" begin
     T = Float64
 
@@ -190,6 +197,50 @@ end
         for i in 1:3
             @test derivative(xs -> f(xs) + g(xs), xs, i) ≈ derivative(f, xs, i) + derivative(g, xs, i)
             @test derivative(xs -> a * f(xs), xs, i) ≈ a * derivative(f, xs, i)
+        end
+    end
+end
+
+Random.seed!(0)
+@testset "Derivatives of function with complex arguments" begin
+    T = Float64
+
+    randfloat() = rand(T)
+
+    for iter in 1:100
+        x = Complex(randfloat(), randfloat())
+        X = SVector(Complex(randfloat(), randfloat()), Complex(randfloat(), randfloat()))
+
+        c0 = randfloat()
+        c1 = randfloat()
+        fs = [x -> x + c0, x -> c1 * x, x -> x^2, cos, sin, x -> sqrt(x + 1)]
+        f1 = rand(fs)
+        f2 = rand(fs)
+        f3 = rand(fs)
+        f4 = rand(fs)
+        g1 = rand(fs)
+        g2 = rand(fs)
+        g3 = rand(fs)
+        g4 = rand(fs)
+        f(x) = (f1(real(x)) + im * f2(real(x))) + (f3(imag(x)) + im * f4(imag(x)))
+        g(x) = (g1(real(x)) + im * g2(real(x))) * (g3(imag(x)) + im * g4(imag(x)))
+
+        F(xs) = f(xs[1]) + g(xs[2])
+        G(xs) = f(xs[2]) * g(xs[1])
+
+        a = randfloat()
+
+        @test derivative(f, x, 1) ≈ derivative(f1, real(x)) + im * derivative(f2, real(x))
+        @test derivative(f, x, 2) ≈ derivative(f3, imag(x)) + im * derivative(f4, imag(x))
+
+        for c in 1:2
+            @test derivative(x -> f(x) + g(x), x, c) ≈ derivative(f, x, c) + derivative(g, x, c)
+            @test derivative(x -> a * f(x), x, c) ≈ a * derivative(f, x, c)
+        end
+
+        for i in 1:2, c in 1:2
+            @test derivative(X -> F(X) + G(X), X, i, c) ≈ derivative(F, X, i, c) + derivative(G, X, i, c)
+            @test derivative(X -> a * F(X), X, i, c) ≈ a * derivative(F, X, i, c)
         end
     end
 end

@@ -24,6 +24,7 @@ Base.:(<)(x::Real, y::Dual) = Dual(x) < y
 
 Base.promote_rule(::Type{Dual{T1}}, ::Type{Dual{T2}}) where {T1,T2} = Dual{promote_type(T1, T2)}
 Base.promote_rule(::Type{T1}, ::Type{Dual{T2}}) where {T1<:Real,T2} = Dual{promote_type(T1, T2)}
+Base.promote_rule(::Type{Bool}, ::Type{Dual{T2}}) where {T2} = Dual{promote_type(Bool, T2)}
 
 Base.zero(x::Dual) = Dual(zero(x.primal))
 Base.one(x::Dual) = Dual(one(x.primal))
@@ -58,11 +59,21 @@ Base.sqrt(x::Dual) = Dual(sqrt(x.primal), x.dual / (2 * sqrt(x.primal)))
 """
     derivative(f, x)
     derivative(f, xs, i)
+    derivative(f, x, c)
+    derivative(f, xs, i, c)
 
 Evaluate the partial derivative of the scalar-argument function `f(x)`
 at `x`, or of the array-argument function `f(xs)` at `xs[i]`.
+
+When the argument `x` (or `xs[i]`) is complex, then an additional
+argument `c` chooses whether the partial derivative is with respect to
+the real (`c==1`) or imaginary (`c==2`) part of the argument.
 """
+function derivative end
+export derivative
+
 derivative(f, x::T) where {T<:Real} = f(Dual(x, 1)).dual
+
 function derivative(f, xs::AbstractArray{T}, n::Integer) where {T<:Real}
     xs′ = similar(xs, Dual{T})
     for i in 1:length(xs′)
@@ -70,6 +81,21 @@ function derivative(f, xs::AbstractArray{T}, n::Integer) where {T<:Real}
     end
     return f(xs′).dual
 end
-export derivative
+
+function derivative(f, x::Complex{T}, c::Integer) where {T<:Real}
+    fx′ = f(Complex(Dual(real(x), c == 1), Dual(imag(x), c == 2)))
+    fx′::Complex
+    return Complex(real(fx′).dual, imag(fx′).dual)
+end
+
+function derivative(f, xs::AbstractArray{Complex{T}}, n::Integer, c::Integer) where {T<:Real}
+    xs′ = similar(xs, Complex{Dual{T}})
+    for i in 1:length(xs′)
+        xs′[i] = Complex(Dual(real(xs[i]), i == n && c == 1), Dual(imag(xs[i]), i == n && c == 2))
+    end
+    fx′ = f(xs′)
+    fx′::Complex
+    return Complex(real(fx′).dual, imag(fx′).dual)
+end
 
 end
